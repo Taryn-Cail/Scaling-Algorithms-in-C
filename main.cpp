@@ -1,9 +1,10 @@
 #include <iostream>
-#include <iomanip>
 #include <vector>
+#include <chrono>
+#include <fstream>
 
+// Include your helper headers
 #include "utils.h"
-
 #include "bubble_sort.h"
 #include "insertion_sort.h"
 #include "selection_sort.h"
@@ -11,75 +12,93 @@
 #include "quick_sort.h"
 #include "heap_sort.h"
 
-using namespace std;
+int main() {
+    // Array sizes to test
+    std::vector<int> arraySizes = {1000, 10000, 50000, 100000, 500000, 1000000};
 
-int main()
-{
-    const int trials = 10;
+    // Open CSV file
+    std::ofstream csvFile("sorting_timings.csv");
+    csvFile << "Algorithm,ArraySize,Trial,Time_ms\n";
 
-    vector<int> sizes =
-    {
-        1000,
-        10000,
-        50000,
-        100000,
-        500000,
-        1000000
-    };
+    // Loop through array sizes
+    for (int size : arraySizes) {
+        std::cout << "Running benchmarks for array size: " << size << std::endl;
 
-    cout << fixed << setprecision(6);
+        // Generate base random array
+        std::vector<int> baseArray = generateRandomArray(size);
 
-    cout << "============================================================\n";
-    cout << "Sorting Benchmark (Average Time in Seconds)\n";
-    cout << "============================================================\n";
+        // Run 10 trials
+        for (int trial = 1; trial <= 10; ++trial) {
+            std::cout << "  Trial " << trial << "..." << std::endl;
 
-    cout << setw(10) << "Size"
-         << setw(12) << "Bubble"
-         << setw(12) << "Insertion"
-         << setw(12) << "Selection"
-         << setw(12) << "Merge"
-         << setw(12) << "Quick"
-         << setw(12) << "Heap" << endl;
+            // Bubble Sort (skip if array is too large)
+            if (size <= 100000) {
+                std::vector<int> arrCopy = baseArray;
+                auto start = std::chrono::high_resolution_clock::now();
+                runBubbleSort(arrCopy);
+                auto end = std::chrono::high_resolution_clock::now();
+                double ms = std::chrono::duration<double, std::milli>(end - start).count();
+                csvFile << "BubbleSort," << size << "," << trial << "," << ms << "\n";
+            }
 
-    cout << "------------------------------------------------------------\n";
+            // Insertion Sort (skip if array is too large)
+            if (size <= 100000) {
+                std::vector<int> arrCopy = baseArray;
+                auto start = std::chrono::high_resolution_clock::now();
+                runInsertionSort(arrCopy);
+                auto end = std::chrono::high_resolution_clock::now();
+                double ms = std::chrono::duration<double, std::milli>(end - start).count();
+                csvFile << "InsertionSort," << size << "," << trial << "," << ms << "\n";
+            }
 
-    for(int size : sizes)
-    {
-        double bubble = 0;
-        double insertion = 0;
-        double selection = 0;
-        double merge = 0;
-        double quick = 0;
-        double heap = 0;
+            // Selection Sort (skip if array is too large)
+            if (size <= 100000) {
+                std::vector<int> arrCopy = baseArray;
+                auto start = std::chrono::high_resolution_clock::now();
+                runSelectionSort(arrCopy);
+                auto end = std::chrono::high_resolution_clock::now();
+                double ms = std::chrono::duration<double, std::milli>(end - start).count();
+                csvFile << "SelectionSort," << size << "," << trial << "," << ms << "\n";
+            }
 
-        for(int t = 0; t < trials; t++)
-        {
-            vector<int> baseArray = generateRandomArray(size);
+            // Merge Sort
+            {
+                std::vector<int> arrCopy = baseArray;
+                auto start = std::chrono::high_resolution_clock::now();
+                runMergeSort(arrCopy);
+                auto end = std::chrono::high_resolution_clock::now();
+                double ms = std::chrono::duration<double, std::milli>(end - start).count();
+                csvFile << "MergeSort," << size << "," << trial << "," << ms << "\n";
+            }
 
-            bubble += runBubbleSort(baseArray);
-            insertion += runInsertionSort(baseArray);
-            selection += runSelectionSort(baseArray);
-            merge += runMergeSort(baseArray);
-            quick += runQuickSort(baseArray);
-            heap += runHeapSort(baseArray);
+            // Quick Sort
+            {
+                std::vector<int> arrCopy = baseArray;
+                auto start = std::chrono::high_resolution_clock::now();
+                runQuickSort(arrCopy);
+                auto end = std::chrono::high_resolution_clock::now();
+                double ms = std::chrono::duration<double, std::milli>(end - start).count();
+                csvFile << "QuickSort," << size << "," << trial << "," << ms << "\n";
+            }
+
+            // Heap Sort
+            {
+                std::vector<int> arrCopy = baseArray;
+                auto start = std::chrono::high_resolution_clock::now();
+                runHeapSort(arrCopy);
+                auto end = std::chrono::high_resolution_clock::now();
+                double ms = std::chrono::duration<double, std::milli>(end - start).count();
+                csvFile << "HeapSort," << size << "," << trial << "," << ms << "\n";
+            }
         }
-
-        bubble /= trials;
-        insertion /= trials;
-        selection /= trials;
-        merge /= trials;
-        quick /= trials;
-        heap /= trials;
-
-        cout << setw(10) << size
-             << setw(12) << bubble
-             << setw(12) << insertion
-             << setw(12) << selection
-             << setw(12) << merge
-             << setw(12) << quick
-             << setw(12) << heap
-             << endl;
     }
+
+    csvFile.close();
+    std::cout << "\nAll benchmarks completed. Results saved to sorting_timings.csv\n";
+
+    // Optional: pause to view console output
+    std::cout << "Press ENTER to exit...";
+    std::cin.get();
 
     return 0;
 }
