@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include <fstream>
+#include <numeric> // for std::accumulate
 
 // Include your helper headers
 #include "utils.h"
@@ -12,91 +12,69 @@
 #include "quick_sort.h"
 #include "heap_sort.h"
 
+// Helper to print trial results
+void printResult(const std::string& algo, int size, int trial, double time) {
+    std::cout << algo
+              << " | Size: " << size
+              << " | Trial: " << trial
+              << " | Time: " << time << " ms"
+              << std::endl;
+}
+
+// Helper to run a sorting algorithm for 10 trials and return the average time
+template<typename SortFunc>
+double runTrials(const std::string& algoName, int size, SortFunc sortFunc, const std::vector<int>& baseArray) {
+    std::vector<double> trialTimes;
+
+    for (int trial = 1; trial <= 10; ++trial) {
+        std::vector<int> arrCopy = baseArray; // work on a copy
+        auto start = std::chrono::high_resolution_clock::now();
+        sortFunc(arrCopy);
+        auto end = std::chrono::high_resolution_clock::now();
+
+        double ms = std::chrono::duration<double, std::milli>(end - start).count();
+        trialTimes.push_back(ms);
+        printResult(algoName, size, trial, ms);
+    }
+
+    // Compute average
+    double avg = std::accumulate(trialTimes.begin(), trialTimes.end(), 0.0) / trialTimes.size();
+    std::cout << algoName << " | Size: " << size << " | Average Time: " << avg << " ms\n";
+    std::cout << "----------------------------------------\n";
+    return avg;
+}
+
 int main() {
-    // Array sizes to test
     std::vector<int> arraySizes = {1000, 10000, 50000, 100000, 500000, 1000000};
 
-    // Open CSV file
-    std::ofstream csvFile("sorting_timings.csv");
-    csvFile << "Algorithm,ArraySize,Trial,Time_ms\n";
-
-    // Loop through array sizes
     for (int size : arraySizes) {
-        std::cout << "Running benchmarks for array size: " << size << std::endl;
+        std::cout << "\n==============================\n";
+        std::cout << "Array Size: " << size << std::endl;
+        std::cout << "==============================\n";
 
         // Generate base random array
         std::vector<int> baseArray = generateRandomArray(size);
 
-        // Run 10 trials
-        for (int trial = 1; trial <= 10; ++trial) {
-            std::cout << "  Trial " << trial << "..." << std::endl;
+        // Bubble Sort (skip if too large)
+        if (size <= 100000) runTrials("BubbleSort   ", size, runBubbleSort, baseArray);
 
-            // Bubble Sort (skip if array is too large)
-            if (size <= 100000) {
-                std::vector<int> arrCopy = baseArray;
-                auto start = std::chrono::high_resolution_clock::now();
-                runBubbleSort(arrCopy);
-                auto end = std::chrono::high_resolution_clock::now();
-                double ms = std::chrono::duration<double, std::milli>(end - start).count();
-                csvFile << "BubbleSort," << size << "," << trial << "," << ms << "\n";
-            }
+        // Insertion Sort (skip if too large)
+        if (size <= 100000) runTrials("InsertionSort", size, runInsertionSort, baseArray);
 
-            // Insertion Sort (skip if array is too large)
-            if (size <= 100000) {
-                std::vector<int> arrCopy = baseArray;
-                auto start = std::chrono::high_resolution_clock::now();
-                runInsertionSort(arrCopy);
-                auto end = std::chrono::high_resolution_clock::now();
-                double ms = std::chrono::duration<double, std::milli>(end - start).count();
-                csvFile << "InsertionSort," << size << "," << trial << "," << ms << "\n";
-            }
+        // Selection Sort (skip if too large)
+        if (size <= 100000) runTrials("SelectionSort", size, runSelectionSort, baseArray);
 
-            // Selection Sort (skip if array is too large)
-            if (size <= 100000) {
-                std::vector<int> arrCopy = baseArray;
-                auto start = std::chrono::high_resolution_clock::now();
-                runSelectionSort(arrCopy);
-                auto end = std::chrono::high_resolution_clock::now();
-                double ms = std::chrono::duration<double, std::milli>(end - start).count();
-                csvFile << "SelectionSort," << size << "," << trial << "," << ms << "\n";
-            }
+        // Merge Sort
+        runTrials("MergeSort    ", size, runMergeSort, baseArray);
 
-            // Merge Sort
-            {
-                std::vector<int> arrCopy = baseArray;
-                auto start = std::chrono::high_resolution_clock::now();
-                runMergeSort(arrCopy);
-                auto end = std::chrono::high_resolution_clock::now();
-                double ms = std::chrono::duration<double, std::milli>(end - start).count();
-                csvFile << "MergeSort," << size << "," << trial << "," << ms << "\n";
-            }
+        // Quick Sort
+        runTrials("QuickSort    ", size, runQuickSort, baseArray);
 
-            // Quick Sort
-            {
-                std::vector<int> arrCopy = baseArray;
-                auto start = std::chrono::high_resolution_clock::now();
-                runQuickSort(arrCopy);
-                auto end = std::chrono::high_resolution_clock::now();
-                double ms = std::chrono::duration<double, std::milli>(end - start).count();
-                csvFile << "QuickSort," << size << "," << trial << "," << ms << "\n";
-            }
-
-            // Heap Sort
-            {
-                std::vector<int> arrCopy = baseArray;
-                auto start = std::chrono::high_resolution_clock::now();
-                runHeapSort(arrCopy);
-                auto end = std::chrono::high_resolution_clock::now();
-                double ms = std::chrono::duration<double, std::milli>(end - start).count();
-                csvFile << "HeapSort," << size << "," << trial << "," << ms << "\n";
-            }
-        }
+        // Heap Sort
+        runTrials("HeapSort     ", size, runHeapSort, baseArray);
     }
 
-    csvFile.close();
-    std::cout << "\nAll benchmarks completed. Results saved to sorting_timings.csv\n";
-
-    // Optional: pause to view console output
+    std::cout << "\nAll benchmarks completed.\n";
     std::cout << "Press ENTER to exit...";
     std::cin.get();
 
