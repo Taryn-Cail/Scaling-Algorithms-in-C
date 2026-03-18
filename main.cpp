@@ -45,7 +45,7 @@ double runTrials(const std::string& algoName, int size, SortFunc sortFunc, const
 }
 
 int main() {
-    std::vector<int> arraySizes = {1000, 10000, 50000, 100000, 500000, 1000000};
+    std::vector<int> arraySizes = {50000, 100000, 500000, 1000000, 5000000, 10000000};
 
     for (int size : arraySizes) {
         std::cout << "\n==============================\n";
@@ -56,13 +56,13 @@ int main() {
         std::vector<int> baseArray = generateRandomArray(size);
 
         // Bubble Sort (skip if too large)
-        if (size <= 100000) runTrials("BubbleSort   ", size, runBubbleSort, baseArray);
+        //runTrials("BubbleSort   ", size, runBubbleSort, baseArray);
 
         // Insertion Sort (skip if too large)
-        if (size <= 100000) runTrials("InsertionSort", size, runInsertionSort, baseArray);
+        //runTrials("InsertionSort", size, runInsertionSort, baseArray);
 
         // Selection Sort (skip if too large)
-        if (size <= 100000) runTrials("SelectionSort", size, runSelectionSort, baseArray);
+        //runTrials("SelectionSort", size, runSelectionSort, baseArray);
 
         // Merge Sort
         runTrials("MergeSort    ", size, runMergeSort, baseArray);
